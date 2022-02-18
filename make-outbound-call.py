@@ -1,20 +1,22 @@
 from __future__ import print_function
 import time
 import freeclimb
+from freeclimb.api import default_api
 import os
 import json
 from flask import Flask, request
-from freeclimb import percl_to_json
 
-configuration = freeclimb.Configuration()
-# Configure HTTP basic authorization: fc
-configuration.username = os.environ['ACCOUNT_ID']
-configuration.password = os.environ['API_KEY']
 
-# Defining host is optional and default to https://www.freeclimb.com/apiserver
-configuration.host = "https://www.freeclimb.com/apiserver"
+configuration = freeclimb.Configuration(
+    # Defining host is optional and default to https://www.freeclimb.com/apiserver
+    host     = "https://www.freeclimb.com/apiserver",
+    # Configure HTTP basic authorization: fc
+    username = os.environ['ACCOUNT_ID'],
+    password = os.environ['API_KEY']
+)
+
 # Create an instance of the API class
-api_instance = freeclimb.DefaultApi(freeclimb.ApiClient(configuration))
+api_instance = default_api.DefaultApi(freeclimb.ApiClient(configuration))
 
 app = Flask(__name__)
 
@@ -31,13 +33,12 @@ def sendCall():
 @app.route('/callConnect', methods=['POST'])
 def callConnect():
     if request.method == 'POST':
-        script = freeclimb.PerclScript(commands=[])
-
-        script.commands.append(freeclimb.Say(
-            text="Hello. Welcome to FreeClimb's outbound call tutorial."))
-        script.commands.append(freeclimb.Pause(length=1000))
-        script.commands.append(freeclimb.Say(text="Goodbye."))
-        return percl_to_json(script)
+        script = freeclimb.PerclScript(commands=[
+            freeclimb.Say(text="Hello. Welcome to FreeClimb's outbound call tutorial."),
+            freeclimb.Pause(length=1000),
+            freeclimb.Say(text="Goodbye.")
+        ])
+        return script.to_json(), 200, {'ContentType': 'application/json'}
 
 # Specify this route with 'STATUS CALLBACK URL' in App Config
 @app.route('/status', methods=['POST'])
